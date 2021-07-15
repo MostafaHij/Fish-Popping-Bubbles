@@ -10,7 +10,8 @@ canvas.height = 600;
 let score = 0;
 let gameFrame = 0;
 
-ctx.font = '30px Georgia';
+ctx.font = '30px Courier New';
+
 
 // Mouse Interactivity
 const mouse = {
@@ -41,9 +42,11 @@ class Player {
         this.angle = 0;
         this.frameX = 0;
         this.frameY = 0;
-        this.frame = 0;
-        this.spriteWidth = 1992 / 4;
-        this.spriteHeight = 1635 / 5;
+        this.spriteWidth = 1992 / 4; // sprite width / number of frames
+        this.spriteHeight = 1635 / 5; // sprite height / number of frames
+        this.width = this.spriteWidth / 4;
+        this.height = this.spriteHeight / 4;
+        this.timer = 0;
     }
 
     update() {
@@ -57,6 +60,24 @@ class Player {
         if (this.y != mouse.y) {
             this.y -= dy / 20 // for speed
         }
+
+
+        this.timer++;
+
+        // Every 4 frames animate fish sprite
+        if (this.timer % 4 == 0) {
+
+            if (this.frameX < 3) { // frame X
+                this.frameX++;
+            } else {
+                this.frameX = 0;
+                this.frameY++;
+            }
+
+            if (this.frameY > 4) { // frame Y
+                this.frameY = 0;
+            }
+        }
     }
 
     draw() {
@@ -69,24 +90,19 @@ class Player {
             ctx.stroke();
         }
 
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
 
+        // to rotate player according to mouse //
 
         ctx.save(); // save canvas sittings
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle); // rotate player according to angle
 
-        if (this.x >= mouse.x) {
-            // Img to left
-            ctx.drawImage(playerLeft, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, 0 - 60, 0 - 45, this.spriteWidth / 4, this.spriteHeight / 4)
-        } else {
-            // Img to right
-            ctx.drawImage(playerRight, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, 0 - 60, 0 - 45, this.spriteWidth / 4, this.spriteHeight / 4)
 
+        if (this.x >= mouse.x) {  // player image face to LEFT
+            // Tip: (0 - 60) and (0 - 45) ===> the zero (0) because we passed this.x and this.y in ctx.translate(this.x,this.y)
+            ctx.drawImage(playerLeft, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, 0 - 60, 0 - 45, this.width, this.height)
+        } else {  // player image face to RIGHT
+            ctx.drawImage(playerRight, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, 0 - 60, 0 - 45, this.width, this.height)
         }
         ctx.restore();
 
@@ -98,13 +114,6 @@ const playerLeft = new Image();
 playerLeft.src = 'images/red_fish_left.png';
 const playerRight = new Image();
 playerRight.src = 'images/red_fish_right.png';
-
-
-
-
-
-
-
 
 
 
@@ -130,16 +139,17 @@ class Bubble {
         const dx = this.x - player.x;
         const dy = this.y - player.y;
         this.distance = Math.sqrt(dx * dx + dy * dy);
+
     }
 
     draw() {
 
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.strokeStyle = 'rgba(14,147,213,1)';
         ctx.beginPath();
+        ctx.lineWidth = 2;
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(14,147,213,1)';
         ctx.closePath();
         ctx.stroke();
 
@@ -171,8 +181,8 @@ function handleBubble() {
             // Check for collision between player and bubble
             if (bubblesArray[i].distance < bubblesArray[i].radius + player.radius) {
                 bubblesArray[i].sound.play()
-                score++;
                 bubblesArray.splice(i, 1); // remove it when there is collision
+                score++;
             }
         }
     }
@@ -182,6 +192,7 @@ function handleBubble() {
 
 // Start Animation Loop
 function animate() {
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     player.update();
     player.draw();
